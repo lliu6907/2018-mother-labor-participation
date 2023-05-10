@@ -15,6 +15,8 @@ Load packages and data:
 #| label: load-packages
 
 library(tidyverse)
+library(usmap)
+library(ggplot2)
 
 #| label: load-data
 tuesdata <- tidytuesdayR::tt_load('2023-05-09')
@@ -26,12 +28,30 @@ counties <- tuesdata$counties
 
 ## Extra credit
 
-**Research Question:** How does Tompkins county's childcare costs compare to that of Broome county's?
+**Research Question:** What is the labor force participation of mothers who have children throughout the United States in the year 2018? How does this compare to 2008?
 
 ```{r}
-#| label: data-tidying
-
-tomp_broom <- childcare_costs |>
-  filter(county_fips_code == "36109" | county_fips_code == "36007")
-  
+#| label: data-wrangling
+labor_part_2018 <- childcare_costs |>
+  #select relevant columns to use for analysis
+  select(county_fips_code, study_year, flfpr_20to64_under6, flfpr_20to64_6to17) |>
+  #filter so we only use the year 2018
+  filter(study_year == "2018") |>
+  #did this justttt in case if there's n/a values
+  drop_na() |>
+  #combine the column for labor participation of mothers with children under the age
+  #of 6 alongside the labor participation of mothers with children 6 to 17.
+  pivot_longer(
+    cols = -c("county_fips_code", "study_year"),
+    names_transform = parse_number,
+    values_to = "pct"
+  ) |>
+  #get rid of the name column, which is kindaaa unnecessary :p
+  select(-name) |>
+  #because there's two rows of the same area (one for the labor participation
+  #percentage of mothers with children under 6 age group and the other one for
+  #the 6-17 age group), I decided to average them together to get the total
+  #labor participation
+  group_by(county_fips_code) |>
+  summarize(pct = mean(pct))
 ```

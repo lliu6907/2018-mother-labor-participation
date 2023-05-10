@@ -27,7 +27,7 @@ counties <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/t
 
 ## Extra credit
 
-**Research Question:** What is the labor force participation of mothers who have children throughout the United States in the year 2018? How does this compare to 2008?
+**Research Question:** What is the labor force participation of mothers who have children throughout the United States in the year 2018?
 
 ```{r}
 #| label: data-wrangling
@@ -143,9 +143,19 @@ state_map$layers[[2]]$aes_params$size <- 3
 print(state_map)
 ```
 
+**Purpose**
+
+-   The purpose of the visualization is to show how the labor force of the mothers in 2018 compare throughout the United States by different states and counties. Moreover, I thought it was fitting for Mother's day.
+
+-   It helps to answer the question of the labor force participation of mothers who have children throughout the United States in the year 2018.
+
+-   I chose this type of visualization because it incorporates different areas of the United States, which is perfect for the data. It also kinda looked fun and it's something I haven't done before!
+
+Happy Mother's Day!! :)
+
 **Closer view of the map**
 
-The following maps show the labor force participation of mothers by region. I only added the code chunk for first map since the code is repetitive.
+The following maps show the labor force participation of mothers by region (for fun!). I only added the code chunk for first map since the code is repetitive.
 
 ```{r}
 #| label: east-north-central

@@ -25,3 +25,9 @@ counties <- tuesdata$counties
 ```
 
 ## Extra credit
+
+**Research Question:** How does Tompkins county's childcare costs compare to that of Boome county's?
+
+```{r}
+#| label: data-tidying
+```

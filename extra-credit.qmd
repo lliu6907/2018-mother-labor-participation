@@ -26,8 +26,12 @@ counties <- tuesdata$counties
 
 ## Extra credit
 
-**Research Question:** How does Tompkins county's childcare costs compare to that of Boome county's?
+**Research Question:** How does Tompkins county's childcare costs compare to that of Broome county's?
 
 ```{r}
 #| label: data-tidying
+
+tomp_broom <- childcare_costs |>
+  filter(county_fips_code == "36109" | county_fips_code == "36007")
+  
 ```

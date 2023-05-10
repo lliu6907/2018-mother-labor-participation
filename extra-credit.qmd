@@ -17,13 +17,12 @@ Load packages and data:
 library(tidyverse)
 library(usmap)
 library(ggplot2)
+library(wesanderson)
+library(scales)
 
 #| label: load-data
-tuesdata <- tidytuesdayR::tt_load('2023-05-09')
-tuesdata <- tidytuesdayR::tt_load(2023, week = 19)
-
-childcare_costs <- tuesdata$childcare_costs
-counties <- tuesdata$counties
+childcare_costs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/childcare_costs.csv')
+counties <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/counties.csv')
 ```
 
 ## Extra credit
@@ -53,19 +52,36 @@ labor_part_2018 <- childcare_costs |>
   # the 6-17 age group), I decided to average them together to get the total
   # labor participation
   group_by(county_fips_code) |>
-  summarize(pct = mean(pct))
+  summarize(pct = mean(pct)) |>
+  # aligning the fips code of the data so it matches w/ the fips code and column
+  # name that the usmap package gave. I added a leading zero in the beginning &
+  # changed the column name to fips
+  mutate(
+    county_fips_code = as.character(county_fips_code),
+    fips = if_else(nchar(county_fips_code) == 4,
+                               paste0("0", county_fips_code),
+                               county_fips_code),
+    pct = pct/100)
 ```
 
 ```{r}
 #| label: creating-visualization
+#| fig-height: 10
+#| fig-width: 12
 
 # I followed this tutorial for the US map:
 # https://jtr13.github.io/cc19/different-ways-of-plotting-u-s-map-in-r.html
 
-plot_usmap(regions = "counties")  + 
+plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005)  + 
   labs(title = "Labor Force Participation of Mothers throughout the United States",
-       subtitle = "For the year 2018",
-       caption = "Source: National Database of Childcare Prices") + 
-  theme(panel.background = element_blank())
-
+       subtitle = "Separated by county for the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent)
 ```

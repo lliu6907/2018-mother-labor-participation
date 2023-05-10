@@ -1,8 +1,8 @@
 ---
 title: "Extra credit"
 subtitle: "INFO 2950 - Spring 2023"
-author: "Your name"
-date: "Your date"
+author: "Lina Liu"
+date: "05/10/23"
 format: pdf
 editor: visual
 ---
@@ -15,6 +15,13 @@ Load packages and data:
 #| label: load-packages
 
 library(tidyverse)
+
+#| label: load-data
+tuesdata <- tidytuesdayR::tt_load('2023-05-09')
+tuesdata <- tidytuesdayR::tt_load(2023, week = 19)
+
+childcare_costs <- tuesdata$childcare_costs
+counties <- tuesdata$counties
 ```
 
 ## Extra credit

@@ -21,8 +21,13 @@ library(wesanderson)
 library(scales)
 
 #| label: load-data
-childcare_costs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/childcare_costs.csv')
-counties <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/counties.csv')
+
+tuesdata <- tidytuesdayR::tt_load('2023-05-09')
+tuesdata <- tidytuesdayR::tt_load(2023, week = 19)
+
+childcare_costs <- tuesdata$childcare_costs
+counties <- tuesdata$counties
+
 ```
 
 ## Extra credit

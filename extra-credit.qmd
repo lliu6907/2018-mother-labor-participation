@@ -31,6 +31,8 @@ counties <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/t
 
 ```{r}
 #| label: data-wrangling
+
+#| label: labor-county
 labor_part_2018 <- childcare_costs |>
   # select relevant columns to use for analysis
   select(county_fips_code, study_year, flfpr_20to64_under6, flfpr_20to64_6to17) |>
@@ -62,6 +64,28 @@ labor_part_2018 <- childcare_costs |>
                                paste0("0", county_fips_code),
                                county_fips_code),
     pct = pct/100)
+
+#| label: labor-states
+state_joined <- inner_join(x = childcare_costs, y = counties,
+             by = "county_fips_code")
+
+labor_part_2018_states <- state_joined |>
+  select(study_year,
+         flfpr_20to64_under6,
+         flfpr_20to64_6to17,
+         state_abbreviation) |>
+  filter(study_year == "2018") |>
+  drop_na() |>
+  pivot_longer(
+    cols = -c("study_year", "state_abbreviation"),
+    names_transform = parse_number,
+    values_to = "pct"
+  ) |>
+  group_by(state_abbreviation) |>
+  summarize(pct = mean(pct)) |>
+  mutate(
+    state = state_abbreviation,
+    pct = pct/100)
 ```
 
 ```{r}
@@ -69,14 +93,41 @@ labor_part_2018 <- childcare_costs |>
 #| fig-height: 10
 #| fig-width: 12
 
+#| label: visualization-by-county
 # I followed this tutorial for the US map:
 # https://jtr13.github.io/cc19/different-ways-of-plotting-u-s-map-in-r.html
 
 plot_usmap(data = labor_part_2018,
            values = "pct",
            linewidth = 0.0005)  + 
-  labs(title = "Labor Force Participation of Mothers throughout the United States",
-       subtitle = "Separated by county for the year 2018",
+  labs(title = "Labor Force Participation of Mothers throughout the United States
+by County",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+# I referred to this source to make my state lines thicker:
+# https://stackoverflow.com/questions/72543606/how-to-make-census-region-
+# border-thicker-on-usmap-packake-r
+  geom_polygon(data = usmapdata::us_map(regions = "states"),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 0.7,
+               color = "black")
+
+#| label: visualization-by-state
+state_map <- plot_usmap(data = labor_part_2018_states,
+           values = "pct",
+           linewidth = 0.7,
+           labels = TRUE,
+           color = "white") +
+  labs(title = "Labor Force Participation of Mothers throughout the United States
+by States",
+       subtitle = "For the year 2018",
        caption = "Source: National Database of Childcare Prices",
        fill = "Labor Force Participation") + 
   theme(panel.background = element_blank(),
@@ -84,4 +135,376 @@ plot_usmap(data = labor_part_2018,
   scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
                                              type = "continuous"),
                        labels = percent)
+
+# Referred to this as source to make state abbr font smaller:
+# https://stackoverflow.com/questions/60806822/how-do-i-change-state-or-counties-
+# label-sizes-in-r-with-the-function-usmap
+state_map$layers[[2]]$aes_params$size <- 3
+print(state_map)
+```
+
+**Closer view of the map**
+
+The following maps show the labor force participation of mothers by region. I only added the code chunk for first map since the code is repetitive.
+
+```{r}
+#| label: east-north-central
+#| fig-height: 10
+#| fig-width: 12
+
+east_north_central <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .east_north_central,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the East North Central region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .east_north_central),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+east_north_central$layers[[2]]$aes_params$size <- 8
+print(east_north_central)
+```
+
+```{r}
+#| label: by-region
+#| fig-height: 10
+#| fig-width: 12
+#| echo: false
+
+#| label: east-south-central
+east_south_central <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .east_south_central,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the East South Central region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent)  +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .east_south_central),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+east_south_central$layers[[2]]$aes_params$size <- 8
+print(east_south_central)
+
+#| label: mid-west-region
+midwest_region <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .midwest_region,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the Mid-west region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .midwest_region),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+midwest_region$layers[[2]]$aes_params$size <- 8
+print(midwest_region)
+
+#| label: mid-atlantic
+midatlantic <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .mid_atlantic,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the Mid-Atlantic region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .mid_atlantic),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+midatlantic$layers[[2]]$aes_params$size <- 8
+print(midatlantic)
+
+#| label: mountain
+mountain <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .mountain,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the Mountain region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) + 
+  geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .mountain),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+mountain$layers[[2]]$aes_params$size <- 8
+print(mountain)
+
+#| label: new-england
+new_england <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .new_england,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the New England region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .new_england),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+new_england$layers[[2]]$aes_params$size <- 8
+print(new_england)
+
+#| label: north-east-region
+north_east_region <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .northeast_region,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the Northeast region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent)  +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .northeast_region),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+north_east_region$layers[[2]]$aes_params$size <- 8
+print(north_east_region)
+
+#| label: north-central-region
+north_central_region <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .north_central_region,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the North Central region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .north_central_region),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+north_central_region$layers[[2]]$aes_params$size <- 8
+print(north_central_region)
+
+#| label: pacific
+pacific <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .pacific,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the Pacific region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) + 
+  geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .pacific),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+pacific$layers[[2]]$aes_params$size <- 8
+print(pacific)
+
+#| label: south-atlantic
+south_atlantic <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .south_atlantic,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the South Atlantic region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .south_atlantic),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+south_atlantic$layers[[2]]$aes_params$size <- 6.5
+print(south_atlantic)
+
+#| label: south-region
+south_region <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .south_region,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in South region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .south_region),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+south_region$layers[[2]]$aes_params$size <- 8
+print(south_region)
+
+#| label: west-north-central
+west_north_central <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .west_north_central,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers West North Central region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .west_north_central),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+west_north_central$layers[[2]]$aes_params$size <- 8
+print(west_north_central)
+
+#| label: west-region
+west_region <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .west_region,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the West region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent) +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .west_region),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+west_region$layers[[2]]$aes_params$size <- 8
+print(west_region)
+
+#| label: west-south-central
+west_south_central <- plot_usmap(data = labor_part_2018,
+           values = "pct",
+           linewidth = 0.0005,
+           include = .west_south_central,
+           labels = TRUE)  + 
+  labs(title = "Labor Force Participation of Mothers in the West South Central region",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices",
+       fill = "Labor Force Participation") + 
+  theme(panel.background = element_blank(),
+        legend.position = "left") +
+  scale_fill_gradientn(colours = wes_palette("Zissou1", 100,
+                                             type = "continuous"),
+                       labels = percent)  +
+    geom_polygon(data = usmapdata::us_map(regions = "states",
+                                          include = .west_south_central),
+               aes(x, y, group = group),
+               fill = NA,
+               linewidth = 1,
+               color = "black")
+
+west_south_central$layers[[2]]$aes_params$size <- 8
+print(west_south_central)
 ```

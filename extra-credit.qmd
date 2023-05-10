@@ -33,25 +33,39 @@ counties <- tuesdata$counties
 ```{r}
 #| label: data-wrangling
 labor_part_2018 <- childcare_costs |>
-  #select relevant columns to use for analysis
+  # select relevant columns to use for analysis
   select(county_fips_code, study_year, flfpr_20to64_under6, flfpr_20to64_6to17) |>
-  #filter so we only use the year 2018
+  # filter so we only use the year 2018
   filter(study_year == "2018") |>
-  #did this justttt in case if there's n/a values
+  # did this justttt in case if there's n/a values
   drop_na() |>
-  #combine the column for labor participation of mothers with children under the age
-  #of 6 alongside the labor participation of mothers with children 6 to 17.
+  # combine the column for labor participation of mothers with children under the age
+  # of 6 alongside the labor participation of mothers with children 6 to 17.
   pivot_longer(
     cols = -c("county_fips_code", "study_year"),
     names_transform = parse_number,
     values_to = "pct"
   ) |>
-  #get rid of the name column, which is kindaaa unnecessary :p
+  # get rid of the name column, which is kindaaa unnecessary :p
   select(-name) |>
-  #because there's two rows of the same area (one for the labor participation
-  #percentage of mothers with children under 6 age group and the other one for
-  #the 6-17 age group), I decided to average them together to get the total
-  #labor participation
+  # because there's two rows of the same area (one for the labor participation
+  # percentage of mothers with children under 6 age group and the other one for
+  # the 6-17 age group), I decided to average them together to get the total
+  # labor participation
   group_by(county_fips_code) |>
   summarize(pct = mean(pct))
+```
+
+```{r}
+#| label: creating-visualization
+
+# I followed this tutorial for the US map:
+# https://jtr13.github.io/cc19/different-ways-of-plotting-u-s-map-in-r.html
+
+plot_usmap(regions = "counties")  + 
+  labs(title = "Labor Force Participation of Mothers throughout the United States",
+       subtitle = "For the year 2018",
+       caption = "Source: National Database of Childcare Prices") + 
+  theme(panel.background = element_blank())
+
 ```
